@@ -35,7 +35,10 @@ public:
   : Node(node_name, options)
   {
     // Publisher stuff
-    publisher_ = create_publisher<benchmark_interfaces::msg::Num>("topic", 10);
+    auto pub_options = rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>();
+    pub_options.use_default_callbacks = false;
+
+    publisher_ = create_publisher<benchmark_interfaces::msg::Num>("topic", 10, pub_options);
 
     auto timer_callback =
       [this]() -> void {
@@ -47,12 +50,16 @@ public:
     timer_ = create_wall_timer(500ms, timer_callback);
 
     // Subscriber stuff
+    auto sub_options = rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>>();
+    sub_options.use_default_callbacks = false;
+
     subscription_ = create_subscription<benchmark_interfaces::msg::Num>(
       "topic",
       10,
       [this](benchmark_interfaces::msg::Num::SharedPtr msg) {
         RCLCPP_INFO(get_logger(), "   Got: %ld", msg->num);
-      });
+      },
+      sub_options);
   }
 
 private:
