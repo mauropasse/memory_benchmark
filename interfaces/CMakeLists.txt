@@ -21,7 +21,11 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Num.msg"
+  "msg/NumA.msg"
+  "msg/NumB.msg"
+  "msg/NumC.msg"
+  "msg/NumD.msg"
+  "msg/NumE.msg"
  )
 
 ament_package()

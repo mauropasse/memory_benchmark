@@ -23,12 +23,21 @@
 #include <memory>
 
 #include "rclcpp/rclcpp.hpp"
-#include "benchmark_interfaces/msg/num.hpp"
+
+#include "benchmark_interfaces/msg/num_a.hpp"
+#include "benchmark_interfaces/msg/num_b.hpp"
+#include "benchmark_interfaces/msg/num_c.hpp"
+#include "benchmark_interfaces/msg/num_d.hpp"
+#include "benchmark_interfaces/msg/num_e.hpp"
 
 using namespace std::chrono_literals;
 using namespace std;
 
-using Msg = benchmark_interfaces::msg::Num;
+using MsgA = benchmark_interfaces::msg::NumA;
+using MsgB = benchmark_interfaces::msg::NumB;
+using MsgC = benchmark_interfaces::msg::NumC;
+using MsgD = benchmark_interfaces::msg::NumD;
+using MsgE = benchmark_interfaces::msg::NumE;
 // using Executor = rclcpp::executors::StaticSingleThreadedExecutor;
 using Executor = rclcpp::executors::EventsExecutor;
 
@@ -53,12 +62,11 @@ void start_int()
   start = std::chrono::high_resolution_clock::now();
 }
 
-void end_int(std::string str)
+void end_int()
 {
   finish = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::micro> elapsed = finish - start;
   cout << elapsed.count() << " ";
-  // cout << str << " - Time: " << elapsed.count() << " us" << endl;
 }
 
 class MyNode : public rclcpp::Node
@@ -83,9 +91,11 @@ public:
     auto pub_options = rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>();
     pub_options.use_default_callbacks = false;
     pub_options.use_intra_process_comm = ipc;
-    publisher_A = create_publisher<Msg>("topic_A", qos_depth, pub_options);
-    publisher_B = create_publisher<Msg>("topic_B", qos_depth, pub_options);
-    publisher_C = create_publisher<Msg>("topic_C", qos_depth, pub_options);
+    publisher_A = create_publisher<MsgA>("topic_A", qos_depth, pub_options);
+    publisher_B = create_publisher<MsgB>("topic_B", qos_depth, pub_options);
+    publisher_C = create_publisher<MsgC>("topic_C", qos_depth, pub_options);
+    publisher_D = create_publisher<MsgD>("topic_D", qos_depth, pub_options);
+    publisher_E = create_publisher<MsgE>("topic_E", qos_depth, pub_options);
     print_stats("After create_publisher");
 
     // Subscriber options: avoid creating a QoS event
@@ -93,25 +103,39 @@ public:
     sub_options.use_default_callbacks = false;
     sub_options.use_intra_process_comm = ipc;
 
-    subscription_A = create_subscription<Msg>(
+    subscription_A = create_subscription<MsgA>(
       "topic_A", qos_depth,
-      [this](Msg::SharedPtr msg) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      [this](MsgA::SharedPtr msg) {
+        // std::this_thread::sleep_for(std::chrono::microseconds(100));
         // RCLCPP_INFO(get_logger(), " A Got: %ld", msg->num);
       },
       sub_options);
 
-    subscription_B = create_subscription<Msg>(
+    subscription_B = create_subscription<MsgB>(
       "topic_A", qos_depth,
-      [this](Msg::SharedPtr msg) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      [this](MsgB::SharedPtr msg) {
+        // std::this_thread::sleep_for(std::chrono::microseconds(100));
       },
       sub_options);
 
-    subscription_C = create_subscription<Msg>(
+    subscription_C = create_subscription<MsgC>(
       "topic_C", qos_depth,
-      [this](Msg::SharedPtr msg) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      [this](MsgC::SharedPtr msg) {
+        // std::this_thread::sleep_for(std::chrono::microseconds(100));
+      },
+      sub_options);
+
+    subscription_D = create_subscription<MsgD>(
+      "topic_D", qos_depth,
+      [this](MsgD::SharedPtr msg) {
+        // std::this_thread::sleep_for(std::chrono::microseconds(100));
+      },
+      sub_options);
+
+    subscription_E = create_subscription<MsgE>(
+      "topic_E", qos_depth,
+      [this](MsgE::SharedPtr msg) {
+        // std::this_thread::sleep_for(std::chrono::microseconds(100));
       },
       sub_options);
 
@@ -120,27 +144,40 @@ public:
 
   void publish_messages()
   {
-    auto messageA = std::make_unique<Msg>();
-    messageA->num = count_;
-    // RCLCPP_INFO(get_logger(), "Pub A: %ld", messageA->num);
-    start_int();
-    publisher_A->publish(std::move(messageA));
-    end_int("A");
 
-    auto messageB = std::make_unique<Msg>();
+    auto messageB = std::make_unique<MsgB>();
     messageB->num = count_;
     start_int();
     publisher_B->publish(std::move(messageB));
-    end_int(" B");
+    end_int();
 
-    auto messageC = std::make_unique<Msg>();
+    auto messageC = std::make_unique<MsgC>();
     messageC->num = count_;
     start_int();
     publisher_C->publish(std::move(messageC));
-    end_int("  C");
+    end_int();
 
-    count_++;
+    auto messageD = std::make_unique<MsgD>();
+    messageD->num = count_;
+    start_int();
+    publisher_D->publish(std::move(messageD));
+    end_int();
+
+    auto messageE = std::make_unique<MsgE>();
+    messageE->num = count_;
+    start_int();
+    publisher_E->publish(std::move(messageE));
+    end_int();
+
+    auto messageA = std::make_unique<MsgA>();
+    messageA->num = count_;
+    start_int();
+    publisher_A->publish(std::move(messageA));
+    end_int();
+
     cout << endl;
+    count_++;
+    std::this_thread::sleep_for(std::chrono::milliseconds(16));
   }
 
   void publish_loaned()
@@ -148,7 +185,7 @@ public:
     print_stats("Before get loaned message");
 
     std::allocator<void> allocator;
-    rclcpp::LoanedMessage<Msg> loaned_msg(*publisher_A, allocator);
+    rclcpp::LoanedMessage<MsgA> loaned_msg(*publisher_A, allocator);
     print_stats("After get loaned message");
 
     auto & msg_ref = loaned_msg.get();
@@ -165,8 +202,8 @@ public:
   {
       // Pass message as unique ptr
       print_stats("Before create message");
-      // auto message = benchmark_interfaces::msg::Num();
-      auto message = std::make_unique<Msg>();
+      // auto message = benchmark_interfaces::msg::NumA();
+      auto message = std::make_unique<MsgA>();
       print_stats("After create message");
       message->num = 32;
       // std::fill(std::begin(message->data), std::end(message->data), 6);
@@ -175,14 +212,20 @@ public:
   }
 
 private:
-  rclcpp::Subscription<Msg>::SharedPtr subscription_A;
-  rclcpp::Publisher<Msg>::SharedPtr publisher_A;
+  rclcpp::Subscription<MsgA>::SharedPtr subscription_A;
+  rclcpp::Publisher<MsgA>::SharedPtr publisher_A;
 
-  rclcpp::Subscription<Msg>::SharedPtr subscription_B;
-  rclcpp::Publisher<Msg>::SharedPtr publisher_B;
+  rclcpp::Subscription<MsgB>::SharedPtr subscription_B;
+  rclcpp::Publisher<MsgB>::SharedPtr publisher_B;
 
-  rclcpp::Subscription<Msg>::SharedPtr subscription_C;
-  rclcpp::Publisher<Msg>::SharedPtr publisher_C;
+  rclcpp::Subscription<MsgC>::SharedPtr subscription_C;
+  rclcpp::Publisher<MsgC>::SharedPtr publisher_C;
+
+  rclcpp::Subscription<MsgD>::SharedPtr subscription_D;
+  rclcpp::Publisher<MsgD>::SharedPtr publisher_D;
+
+  rclcpp::Subscription<MsgE>::SharedPtr subscription_E;
+  rclcpp::Publisher<MsgE>::SharedPtr publisher_E;
 
   size_t count_{0};
 };
@@ -212,26 +255,36 @@ int main(int argc, char * argv[])
   auto executor = std::make_shared<Executor>();
   executor->add_node(my_node);
 
-  std::thread thread([=](){
+
+  // Create SPIN thread
+  std::thread spin_thread([=](){
       executor->spin();
       // while(true) {
       //   executor->spin_some();
       //   std::this_thread::sleep_for(std::chrono::milliseconds(4));
       // }
   });
-  pthread_setname_np(thread.native_handle(), "Executor thread");
-  thread.detach();
+  pthread_setname_np(spin_thread.native_handle(), "Executor thread");
+  struct sched_param spin_thread_param;
+  spin_thread_param.sched_priority = sched_get_priority_min(SCHED_FIFO);
+  pthread_setschedparam(spin_thread.native_handle(), SCHED_FIFO, &spin_thread_param);
+  spin_thread.detach();
 
+
+  // Create Publisher thread
   std::thread pub_thread([=](){
       while(true) {
         my_node->publish_messages();
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
       }
   });
   pthread_setname_np(pub_thread.native_handle(), "Pub thread");
+
+  struct sched_param pub_thread_param;
+  pub_thread_param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  pthread_setschedparam(pub_thread.native_handle(), SCHED_FIFO, &pub_thread_param);
   pub_thread.detach();
 
-  std::this_thread::sleep_for(std::chrono::seconds(5));
+  std::this_thread::sleep_for(std::chrono::seconds(3));
 
   rclcpp::shutdown();
   print_stats("After shutdown");
