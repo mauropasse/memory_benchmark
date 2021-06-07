@@ -38,9 +38,9 @@ using MsgB = benchmark_interfaces::msg::NumB;
 using MsgC = benchmark_interfaces::msg::NumC;
 using MsgD = benchmark_interfaces::msg::NumD;
 using MsgE = benchmark_interfaces::msg::NumE;
-// using Executor = rclcpp::executors::StaticSingleThreadedExecutor;
-using Executor = rclcpp::executors::EventsExecutor;
 
+using Executor = rclcpp::executors::StaticSingleThreadedExecutor;
+// using Executor = rclcpp::executors::EventsExecutor;
 
 void print_stats(std::string str)
 {
@@ -106,36 +106,35 @@ public:
     subscription_A = create_subscription<MsgA>(
       "topic_A", qos_depth,
       [this](MsgA::SharedPtr msg) {
-        // std::this_thread::sleep_for(std::chrono::microseconds(100));
-        // RCLCPP_INFO(get_logger(), " A Got: %ld", msg->num);
+        RCLCPP_INFO(get_logger(), " A Got: %ld", msg->num);
       },
       sub_options);
 
     subscription_B = create_subscription<MsgB>(
-      "topic_A", qos_depth,
+      "topic_B", qos_depth,
       [this](MsgB::SharedPtr msg) {
-        // std::this_thread::sleep_for(std::chrono::microseconds(100));
+        RCLCPP_INFO(get_logger(), " B Got: %ld", msg->num);
       },
       sub_options);
 
     subscription_C = create_subscription<MsgC>(
       "topic_C", qos_depth,
       [this](MsgC::SharedPtr msg) {
-        // std::this_thread::sleep_for(std::chrono::microseconds(100));
+        RCLCPP_INFO(get_logger(), " C Got: %ld", msg->num);
       },
       sub_options);
 
     subscription_D = create_subscription<MsgD>(
       "topic_D", qos_depth,
       [this](MsgD::SharedPtr msg) {
-        // std::this_thread::sleep_for(std::chrono::microseconds(100));
+        RCLCPP_INFO(get_logger(), " D Got: %ld", msg->num);
       },
       sub_options);
 
     subscription_E = create_subscription<MsgE>(
       "topic_E", qos_depth,
       [this](MsgE::SharedPtr msg) {
-        // std::this_thread::sleep_for(std::chrono::microseconds(100));
+        RCLCPP_INFO(get_logger(), " E Got: %ld", msg->num);
       },
       sub_options);
 
@@ -144,40 +143,44 @@ public:
 
   void publish_messages()
   {
-
-    auto messageB = std::make_unique<MsgB>();
-    messageB->num = count_;
+    // Create messages
     start_int();
-    publisher_B->publish(std::move(messageB));
-    end_int();
-
-    auto messageC = std::make_unique<MsgC>();
-    messageC->num = count_;
-    start_int();
-    publisher_C->publish(std::move(messageC));
-    end_int();
-
-    auto messageD = std::make_unique<MsgD>();
-    messageD->num = count_;
-    start_int();
-    publisher_D->publish(std::move(messageD));
-    end_int();
-
-    auto messageE = std::make_unique<MsgE>();
-    messageE->num = count_;
-    start_int();
-    publisher_E->publish(std::move(messageE));
-    end_int();
-
     auto messageA = std::make_unique<MsgA>();
+    auto messageB = std::make_unique<MsgB>();
+    auto messageC = std::make_unique<MsgC>();
+    auto messageD = std::make_unique<MsgD>();
+    auto messageE = std::make_unique<MsgE>();
     messageA->num = count_;
+    messageB->num = count_;
+    messageC->num = count_;
+    messageD->num = count_;
+    messageE->num = count_;
+    end_int();
+
+    // Publish
     start_int();
     publisher_A->publish(std::move(messageA));
     end_int();
 
+    start_int();
+    publisher_B->publish(std::move(messageB));
+    end_int();
+
+    start_int();
+    publisher_C->publish(std::move(messageC));
+    end_int();
+
+    start_int();
+    publisher_D->publish(std::move(messageD));
+    end_int();
+
+    start_int();
+    publisher_E->publish(std::move(messageE));
+    end_int();
+
     cout << endl;
     count_++;
-    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    std::this_thread::sleep_for(1600ms);
   }
 
   void publish_loaned()
@@ -189,12 +192,11 @@ public:
     print_stats("After get loaned message");
 
     auto & msg_ref = loaned_msg.get();
-    msg_ref.num = 32;
+    msg_ref.num = count_;
     // std::fill(std::begin(msg_ref.data), std::end(msg_ref.data), 1);
     print_stats("After init loaned message");
 
     // RCLCPP_INFO(get_logger(), "Loaned Pub: %ld", msg_ref.num);
-
     publisher_A->publish(std::move(loaned_msg));
   }
 
@@ -255,14 +257,10 @@ int main(int argc, char * argv[])
   auto executor = std::make_shared<Executor>();
   executor->add_node(my_node);
 
-
-  // Create SPIN thread
+  // Executor thread (subscriptions)
   std::thread spin_thread([=](){
       executor->spin();
-      // while(true) {
-      //   executor->spin_some();
-      //   std::this_thread::sleep_for(std::chrono::milliseconds(4));
-      // }
+      // while(true) {executor->spin_some();std::this_thread::sleep_for(4ms));}
   });
   pthread_setname_np(spin_thread.native_handle(), "Executor thread");
   struct sched_param spin_thread_param;
@@ -270,22 +268,20 @@ int main(int argc, char * argv[])
   pthread_setschedparam(spin_thread.native_handle(), SCHED_FIFO, &spin_thread_param);
   spin_thread.detach();
 
-
-  // Create Publisher thread
+  // Publisher thread
   std::thread pub_thread([=](){
       while(true) {
         my_node->publish_messages();
       }
   });
   pthread_setname_np(pub_thread.native_handle(), "Pub thread");
-
   struct sched_param pub_thread_param;
   pub_thread_param.sched_priority = sched_get_priority_max(SCHED_FIFO);
   pthread_setschedparam(pub_thread.native_handle(), SCHED_FIFO, &pub_thread_param);
   pub_thread.detach();
 
-  std::this_thread::sleep_for(std::chrono::seconds(3));
 
+  std::this_thread::sleep_for(3s);
   rclcpp::shutdown();
   print_stats("After shutdown");
 }
