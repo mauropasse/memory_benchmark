@@ -26,6 +26,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/NumC.msg"
   "msg/NumD.msg"
   "msg/NumE.msg"
+  "msg/NumF.msg"
+  "msg/NumG.msg"
+  "msg/NumH.msg"
+  "msg/NumI.msg"
+  "msg/NumJ.msg"
  )
 
 ament_package()

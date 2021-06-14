@@ -25,10 +25,16 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "benchmark_interfaces/msg/num_a.hpp"
-// #include "benchmark_interfaces/msg/num_b.hpp"
-// #include "benchmark_interfaces/msg/num_c.hpp"
-// #include "benchmark_interfaces/msg/num_d.hpp"
-// #include "benchmark_interfaces/msg/num_e.hpp"
+#include "benchmark_interfaces/msg/num_b.hpp"
+#include "benchmark_interfaces/msg/num_c.hpp"
+#include "benchmark_interfaces/msg/num_d.hpp"
+#include "benchmark_interfaces/msg/num_e.hpp"
+
+#include "benchmark_interfaces/msg/num_f.hpp"
+#include "benchmark_interfaces/msg/num_g.hpp"
+#include "benchmark_interfaces/msg/num_h.hpp"
+#include "benchmark_interfaces/msg/num_i.hpp"
+#include "benchmark_interfaces/msg/num_j.hpp"
 
 using namespace std::chrono_literals;
 using namespace std;
@@ -68,7 +74,7 @@ void end_int()
   subscription_ ## name = create_subscription< benchmark_interfaces::msg::Num ## msg_name>( \
     "topic_" #name, qos_depth, \
     [this](benchmark_interfaces::msg::Num ## msg_name::SharedPtr msg) { \
-      RCLCPP_INFO(get_logger(), # name " got: %ld", msg->num); \
+      RCLCPP_INFO(get_logger(), # name " got: %lld", msg->num); \
     }, sub_options);
 
 #define DECLARE_PUB_SUB(name, msg_name) \
@@ -97,15 +103,15 @@ public:
     sub_options.use_intra_process_comm = ipc;
 
     CREATE_PUB_SUB(1, A)
-    CREATE_PUB_SUB(2, A)
-    CREATE_PUB_SUB(3, A)
-    CREATE_PUB_SUB(4, A)
-    CREATE_PUB_SUB(5, A)
-    CREATE_PUB_SUB(6, A)
-    CREATE_PUB_SUB(7, A)
-    CREATE_PUB_SUB(8, A)
-    CREATE_PUB_SUB(9, A)
-    CREATE_PUB_SUB(10, A)
+    CREATE_PUB_SUB(2, B)
+    CREATE_PUB_SUB(3, C)
+    CREATE_PUB_SUB(4, D)
+    CREATE_PUB_SUB(5, E)
+    CREATE_PUB_SUB(6, F)
+    CREATE_PUB_SUB(7, G)
+    CREATE_PUB_SUB(8, H)
+    CREATE_PUB_SUB(9, I)
+    CREATE_PUB_SUB(10, J)
     print_stats("After create publishers and subscribers");
   }
 
@@ -117,30 +123,30 @@ public:
   void publish_messages()
   {
     PUBLISH(1, A)
-    PUBLISH(2, A)
-    PUBLISH(3, A)
-    PUBLISH(4, A)
-    PUBLISH(5, A)
-    PUBLISH(6, A)
-    PUBLISH(7, A)
-    PUBLISH(8, A)
-    PUBLISH(9, A)
-    PUBLISH(10, A)
+    PUBLISH(2, B)
+    PUBLISH(3, C)
+    PUBLISH(4, D)
+    PUBLISH(5, E)
+    PUBLISH(6, F)
+    PUBLISH(7, G)
+    PUBLISH(8, H)
+    PUBLISH(9, I)
+    PUBLISH(10, J)
     count_++; cout << endl;
     std::this_thread::sleep_for(1s);
   }
 
 private:
   DECLARE_PUB_SUB(1, A)
-  DECLARE_PUB_SUB(2, A)
-  DECLARE_PUB_SUB(3, A)
-  DECLARE_PUB_SUB(4, A)
-  DECLARE_PUB_SUB(5, A)
-  DECLARE_PUB_SUB(6, A)
-  DECLARE_PUB_SUB(7, A)
-  DECLARE_PUB_SUB(8, A)
-  DECLARE_PUB_SUB(9, A)
-  DECLARE_PUB_SUB(10, A)
+  DECLARE_PUB_SUB(2, B)
+  DECLARE_PUB_SUB(3, C)
+  DECLARE_PUB_SUB(4, D)
+  DECLARE_PUB_SUB(5, E)
+  DECLARE_PUB_SUB(6, F)
+  DECLARE_PUB_SUB(7, G)
+  DECLARE_PUB_SUB(8, H)
+  DECLARE_PUB_SUB(9, I)
+  DECLARE_PUB_SUB(10, J)
   size_t count_{0};
 };
 
@@ -191,7 +197,7 @@ int main(int argc, char * argv[])
   pub_thread.detach();
   /*********************************************************************************************/
 
-  std::this_thread::sleep_for(3s);
+  std::this_thread::sleep_for(30s);
   rclcpp::shutdown();
   print_stats("After shutdown");
 }
