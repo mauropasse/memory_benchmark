@@ -15,10 +15,16 @@ find_package(rclcpp REQUIRED)
 find_package(benchmark_interfaces REQUIRED)
 
 add_executable(memory_benchmark memory_benchmark.cpp)
+add_executable(pub pub.cpp)
+add_executable(sub sub.cpp)
 ament_target_dependencies(memory_benchmark rclcpp benchmark_interfaces)
+ament_target_dependencies(pub rclcpp benchmark_interfaces)
+ament_target_dependencies(sub rclcpp benchmark_interfaces)
 
 install(TARGETS
   memory_benchmark
+  pub
+  sub
   DESTINATION lib/${PROJECT_NAME}
 )
 ament_package()
